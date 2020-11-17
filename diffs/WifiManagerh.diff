@@ -1,0 +1,20 @@
+--- ../WiFiManager.h	2019-09-09 16:46:45.000000000 +0300
++++ WiFiManager.h	2019-12-13 18:18:40.210459000 +0300
+@@ -79,7 +79,7 @@
+ 
+     //if you want to always start the config portal, without trying to connect first
+     boolean       startConfigPortal();
+-    boolean       startConfigPortal(char const *apName, char const *apPassword = NULL);
++    boolean       startConfigPortal(char const *apName, char const *apPassword = NULL, bool need_connect=true);
+ 
+     // get the AP name of the config portal, so it can be used in the callback
+     String        getConfigPortalSSID();
+@@ -157,7 +157,7 @@
+     //void          setEEPROMString(int start, int len, String string);
+ 
+     int           status = WL_IDLE_STATUS;
+-    int           connectWifi(String ssid, String pass);
++    int           connectWifi(String ssid, String pass, bool need_connect=true);
+     uint8_t       waitForConnectResult();
+ 
+     void          handleRoot();

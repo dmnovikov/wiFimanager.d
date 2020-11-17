@@ -1,0 +1,78 @@
+--- ../WiFiManager.cpp	2019-09-09 16:46:45.000000000 +0300
++++ WiFiManager.cpp	2019-12-13 18:54:02.080823000 +0300
+@@ -195,7 +195,7 @@
+   return startConfigPortal(ssid.c_str(), NULL);
+ }
+ 
+-boolean  WiFiManager::startConfigPortal(char const *apName, char const *apPassword) {
++boolean  WiFiManager::startConfigPortal(char const *apName, char const *apPassword, bool need_connect) {
+   
+   if(!WiFi.isConnected()){
+     WiFi.persistent(false);
+@@ -239,9 +239,10 @@
+       DEBUG_WM(F("Connecting to new AP"));
+ 
+       // using user-provided  _ssid, _pass in place of system-stored ssid and pass
+-      if (connectWifi(_ssid, _pass) != WL_CONNECTED) {
++      if (need_connect && connectWifi(_ssid, _pass) != WL_CONNECTED) {
+         DEBUG_WM(F("Failed to connect."));
+-      } else {
++        break;       
++      } else if(need_connect){
+         //connected
+         WiFi.mode(WIFI_STA);
+         //notify that configuration has changed and any optional parameters should be saved
+@@ -250,6 +251,9 @@
+           _savecallback();
+         }
+         break;
++      }else{
++        connectWifi(_ssid, _pass, false);
++        break;
+       }
+ 
+       if (_shouldBreakAfterConfig) {
+@@ -272,7 +276,23 @@
+ }
+ 
+ 
+-int WiFiManager::connectWifi(String ssid, String pass) {
++int WiFiManager::connectWifi(String ssid, String pass, bool need_connect) {
++
++  if(!need_connect){
++    DEBUG_WM(F("Saving wifi creds.."));
++    WiFi.persistent(true);
++    WiFi.begin(ssid.c_str(), pass.c_str(), 0, NULL, false);
++    
++    // struct station_config stationConf;
++    // wifi_station_get_config (&stationConf);
++
++    // Serial.println(String("saved ssid="+String((char*)stationConf.ssid)+", saved pass=" + String((char*) stationConf.password)));
++
++    DEBUG_WM(F("Saved"));
++    return WL_CONNECT_FAILED;
++
++  }
++
+   DEBUG_WM(F("Connecting as wifi client..."));
+ 
+   // check if we've got static_ip settings, if we do, use those.
+@@ -287,8 +307,18 @@
+     return WL_CONNECTED;
+   }
+   //check if we have ssid and pass and force those, if not, try with last saved values
++  
+   if (ssid != "") {
++    DEBUG_WM(F("Wifi begin"));
++
++    //WiFi.persistent(false);
++
+     WiFi.begin(ssid.c_str(), pass.c_str());
++
++    DEBUG_WM(F("Wifi begin-end"));
++
++    //WiFi.persistent(true);
++
+   } else {
+     if (WiFi.SSID() != "") {
+       DEBUG_WM(F("Using last saved values, should be faster"));
